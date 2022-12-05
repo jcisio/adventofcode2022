@@ -8,3 +8,4 @@ curl "https://adventofcode.com/2022/day/${day}/input" -s -H "cookie: session=$AO
 echo > problem.md
 git add d$1.in problem.md
 git commit -am "Day $1"
+# Then update problem.md and run gcan!
