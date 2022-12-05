@@ -18,13 +18,14 @@ def parse_stacks(lines: list):
     return stacks, moves
 
 
-def solve(stacks, moves):
+def solve(stacks, moves, stack_order):
     for (n, s, t) in moves:
         v = stacks[s-1][0:n]
         stacks[s-1] = stacks[s-1][n:]
-        stacks[t-1] = v[::-1] + stacks[t-1]
+        stacks[t-1] = v[::stack_order] + stacks[t-1]
     return ''.join([stack[0] for stack in stacks])
 
 
 stacks, moves = parse_stacks(f.read().rstrip().split('\n'))
-print("Puzzle 1: ", solve(stacks, moves))
+print("Puzzle 1: ", solve(stacks.copy(), moves, -1))
+print("Puzzle 2: ", solve(stacks, moves, 1))
