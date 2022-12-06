@@ -28,3 +28,6 @@ nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg: first marker after character 10
 zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw: first marker after character 11
 How many characters need to be processed before the first start-of-packet marker is detected?
 
+Your puzzle answer was 1850.
+
+The first half of this puzzle is complete! It provides one gold star: *
