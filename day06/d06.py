@@ -1,12 +1,13 @@
 f = open(__file__[:-3] + '.in', 'r')
 
 
-def solve(input):
-    for i in range(len(input)-3):
-        s = input[i:i+4]
-        if s[0] not in s[1:] and s[1] not in s[2:] and s[2] != s[3]:
-            return i+4
+def solve(input, som_length):
+    for i in range(len(input)-som_length+1):
+        s = input[i:i+som_length]
+        if all([s[i] not in s[i+1:] for i in range(som_length-1)]):
+            return i+som_length
 
 
 input = f.read().strip()
-print("Puzzle 1: ", solve(input))
+print("Puzzle 1: ", solve(input, 4))
+print("Puzzle 2: ", solve(input, 14))
