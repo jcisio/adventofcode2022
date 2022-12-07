@@ -73,3 +73,7 @@ To begin, find all of the directories with a total size of at most 100000, then 
 
 Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?
 
+Your puzzle answer was 1232307.
+
+The first half of this puzzle is complete! It provides one gold star: *
+
