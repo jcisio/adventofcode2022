@@ -1,6 +1,3 @@
-from pprint import pprint
-
-
 f = open(__file__[:-3] + '.in', 'r')
 
 
@@ -30,33 +27,27 @@ def parse_fs(lines):
     line = lines.pop(0)
     line = lines.pop(0)
     while lines:
-        #print(line)
-        #pprint(fs)
-        if line[0] == '$':
-            if line[2:] == 'ls':
-                #pprint(current_path), pprint(current_dir)
-                while lines:
-                    line = lines.pop(0)
-                    #print(line)
-                    if line[0] != '$':
-                        size, name = line.split()
-                        item = {
-                            'dir': size == 'dir',
-                            'name': name,
-                            'size': -1 if size == 'dir' else int(size),
-                            'children': {}
-                        }
-                        current_dir['children'][name] = item
-                    else:
-                        break
-            else:
-                dir = line.split()[2]
-                if dir == '..':
-                    current_path.pop()
-                else:
-                    current_path.append(dir)
-                current_dir = get_dir(fs, current_path)
+        if line[2:] == 'ls':
+            while lines:
                 line = lines.pop(0)
+                if line[0] == '$':
+                    break
+                size, name = line.split()
+                item = {
+                    'dir': size == 'dir',
+                    'name': name,
+                    'size': -1 if size == 'dir' else int(size),
+                    'children': {}
+                }
+                current_dir['children'][name] = item
+        else:
+            dir = line.split()[2]
+            if dir == '..':
+                current_path.pop()
+            else:
+                current_path.append(dir)
+            current_dir = get_dir(fs, current_path)
+            line = lines.pop(0)
     get_size(fs)
     return fs
 
