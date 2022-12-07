@@ -71,9 +71,15 @@ def sum_size_less_than(dir, max_size):
     return size
 
 
-def solve(fs):
-    return sum_size_less_than(fs, 100000)
+def find_min_to_delete(dir, min_size):
+    current_min = dir['size'] if dir['size'] >= min_size else MAX_SIZE
+    children_min = [find_min_to_delete(dir['children'][child], min_size) for child in dir['children'] if dir['children'][child]['dir']]
+    return min([current_min] + children_min)
 
+
+MAX_SIZE = 70000000
 
 fs = parse_fs(f.read().strip().split('\n'))
-print("Puzzle 1: ", solve(fs))
+print("Puzzle 1: ", sum_size_less_than(fs, 100000))
+min_size = fs['size'] - (MAX_SIZE - 30000000)
+print("Puzzle 2: ", find_min_to_delete(fs, min_size))
