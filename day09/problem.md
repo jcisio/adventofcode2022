@@ -477,3 +477,7 @@ s###..
 So, there are 13 positions the tail visited at least once.
 
 Simulate your complete hypothetical series of motions. How many positions does the tail of the rope visit at least once?
+
+Your puzzle answer was 6090.
+
+The first half of this puzzle is complete! It provides one gold star: *
