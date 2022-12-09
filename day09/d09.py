@@ -2,18 +2,15 @@ f = open(__file__[:-3] + '.in', 'r')
 
 
 def follow(h, t):
-    for i in range(2):
-        if abs(h[i]-t[i]) > 1:
-            # Need to move because the tail is not next to the head.
-            for j in range(2):
-                t[j] += 1 if h[j] > t[j] else -1 if h[j] < t[j] else 0
-            break
+    # Move if the tail is not next to the head.
+    if abs(h[0]-t[0]) > 1 or abs(h[1]-t[1]) > 1:
+        for i in range(2):
+            t[i] += 1 if h[i] > t[i] else -1 if h[i] < t[i] else 0
     return t
 
 # Move t *one* step in the direction.
 def move(h, t, d):
-    next = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
-    n = next[d]
+    n = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}[d]
     h = [h[0]+n[0], h[1]+n[1]]
     t = follow(h, t)
     return h, t
