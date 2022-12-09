@@ -1,27 +1,26 @@
 f = open(__file__[:-3] + '.in', 'r')
 
 
+# Move t *one* step in the direction.
+def move(h, t, d):
+    next = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
+    n = next[d]
+    h = [h[0]+n[0], h[1]+n[1]]
+    for i in range(2):
+        if abs(h[i]-t[i]) > 1:
+            # need to move
+            t[1-i] = h[1-i]
+            t[i] += 1 if h[i] > t[i] else -1
+            break
+    return h, t
+
+
 def nextp(h, t, m):
 #    print(m)
-    next = {'U': (0, 1), 'D': (0, -1), 'L': (-1, 0), 'R': (1, 0)}
     p = []
-    n = next[m[0]]
-    while True and m[1] > 0:
-        m[1] -= 1
-        h = [h[0]+n[0], h[1]+n[1]]
-        for i in range(2):
-            if abs(h[i]-t[i]) > 1:
-                # need to move
-                t[1-i] = h[1-i]
-                d = 1 if h[i] > t[i] else -1
-                for j in range(m[1]+1):
-                    t[i] += d
-                    p.append((t[0], t[1]))
-                break
-        else:
-            continue
-        break
-    h = [h[0]+n[0]*m[1], h[1]+n[1]*m[1]]
+    for _ in range(m[1]):
+        h, t = move(h, t, m[0])
+        p.append((t[0], t[1]))
 
 #    print(h,t,p)
     return h, t, p
