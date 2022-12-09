@@ -4,9 +4,9 @@ f = open(__file__[:-3] + '.in', 'r')
 def follow(h, t):
     for i in range(2):
         if abs(h[i]-t[i]) > 1:
-            # need to move
-            t[i] += 1 if h[i] > t[i] else -1
-            t[1-i] += 1 if h[1-i] > t[1-i] else -1 if h[1-i] < t[1-i] else 0
+            # Need to move because the tail is not next to the head.
+            for j in range(2):
+                t[j] += 1 if h[j] > t[j] else -1 if h[j] < t[j] else 0
             break
     return t
 
@@ -17,14 +17,6 @@ def move(h, t, d):
     h = [h[0]+n[0], h[1]+n[1]]
     t = follow(h, t)
     return h, t
-
-
-def nextp(h, t, m):
-    p = []
-    for _ in range(m[1]):
-        h, t = move(h, t, m[0])
-        p.append((t[0], t[1]))
-    return h, t, p
 
 
 def print_knots(knots):
@@ -47,16 +39,13 @@ def solve(moves, n):
     knots = [[0,0] for _ in range(n)]
     positions = {(0, 0)}
     for m in moves:
-#        print(m)
-        knots[0], knots[1], pos = nextp(knots[0], knots[1], m)
-        for p in pos:
-            knots[1] = [p[0], p[1]]
+        for _ in range(m[1]):
+            knots[0], knots[1] = move(knots[0], knots[1], m[0])
             for i in range(2,n):
                 knots[i] = follow(knots[i-1], knots[i])
             positions.add((knots[-1][0], knots[-1][1]))
-            #print((knots[-1][0], knots[-1][1]))
 #        print_knots(knots)
-    print_knots(knots)
+#    print_knots(knots)
     return len(positions)
 
 
