@@ -210,4 +210,7 @@ In this example, the two most active monkeys inspected items 101 and 105 times. 
 
 Figure out which monkeys to chase by counting how many items they inspect over 20 rounds. What is the level of monkey business after 20 rounds of stuff-slinging simian shenanigans?
 
-To begin, get your puzzle input.
+Your puzzle answer was 54253.
+
+The first half of this puzzle is complete! It provides one gold star: *
+
