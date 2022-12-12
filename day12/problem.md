@@ -27,5 +27,6 @@ This path reaches the goal in 31 steps, the fewest possible.
 
 What is the fewest steps required to move from your current position to the location that should get the best signal?
 
-To begin, get your puzzle input.
+Your puzzle answer was 449.
 
+The first half of this puzzle is complete! It provides one gold star: *
