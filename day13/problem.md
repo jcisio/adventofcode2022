@@ -107,6 +107,6 @@ What are the indices of the pairs that are already in the right order? (The firs
 
 Determine which pairs of packets are already in the right order. What is the sum of the indices of those pairs?
 
-To begin, get your puzzle input.
+Your puzzle answer was 4894.
 
-
+The first half of this puzzle is complete! It provides one gold star: *
