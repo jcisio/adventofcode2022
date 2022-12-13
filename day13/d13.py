@@ -1,6 +1,10 @@
+from functools import total_ordering
+
+
 f = open(__file__[:-3] + '.in', 'r')
 
 
+@total_ordering
 class Packet(list):
     @staticmethod
     def from_string(packet_string: str):
@@ -57,5 +61,24 @@ def solve(lines):
     return s
 
 
+def solve2(lines):
+    packets = []
+    while lines:
+        l = lines.pop(0)
+        if l:
+            packets.append(Packet(eval(l)))
+    packets.append(Packet([[2]]))
+    packets.append(Packet([[6]]))
+    packets.sort()
+
+    # Find dividers
+    dividers = []
+    for i, p in enumerate(packets):
+        if len(p) == 1 and isinstance(p[0], list) and len(p[0]) == 1 and p[0][0] in [2, 6]:
+            dividers.append(i+1)
+    return dividers[0]*dividers[1]
+
+
 lines = f.read().strip().split('\n')
-print("Puzzle 1: ", solve(lines))
+print("Puzzle 1: ", solve(lines.copy()))
+print("Puzzle 2: ", solve2(lines))
