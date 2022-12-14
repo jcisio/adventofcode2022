@@ -1,12 +1,29 @@
 #!/bin/sh
-cp -r day01 day$1
+# This script was only tested in Mac OS X. It uses BSD tools, not GNU.
+mkdir day$1
 cd day$1
-mv d01.py d$1.py
-mv d01.in d$1.in
 day=$(echo $1 | sed 's/^0//')
-curl "https://adventofcode.com/2022/day/${day}/input" -s -H "cookie: session=$AOC2022SID" > d$1.test
-echo > d$1.in
-echo > problem.md
-git add d$1.in problem.md
-git commit -am "Day $1"
-# Then update problem.md and run gcan!
+base_url="https://adventofcode.com/2022/day/${day}"
+cookies="cookie: session=$AOC2022SID"
+curl $base_url -s -H $cookies | pandoc -f html -t plain | sed -n '/^--- Day/,$p' > tmp
+
+# Include only a link to the puzzle text
+# https://www.reddit.com/r/adventofcode/wiki/faqs/copyright/puzzle_texts/
+echo '"""' > d$1.py
+echo 'Advent Of Code' >> d$1.py
+cat tmp| sed -n 1p >> d$1.py
+echo $base_url >> d$1.py
+echo '"""' >> d$1.py
+git add d$1.py
+
+# Try to guess the example input.
+cat tmp | sed -n '/^    /,$p' | sed -n '1,/^$/p' | sed 's/    //' > d$1.in
+git add d$1.in
+
+# Write real input in a test file, do not commit it.
+# https://www.reddit.com/r/adventofcode/wiki/faqs/copyright/inputs/
+curl $base_url"/input" -s -H $cookies > d$1.test
+
+git commit -m "Day $1"
+cat ../template.py >> d$1.py
+rm tmp
