@@ -4,6 +4,7 @@ Advent Of Code
 https://adventofcode.com/2022/day/15
 """
 import functools
+import parse
 import re
 
 
@@ -47,7 +48,7 @@ class Problem:
 
 class Solver:
     def __init__(self, input) -> None:
-        self.input = [list(map(int, re.findall(r'-?\d+', x))) for x in input]
+        self.input = [list(parse.parse('Sensor at x={:d}, y={:d}: closest beacon is at x={:d}, y={:d}', line)) for line in input]
 
     def solve(self, part=1):
         problem = Problem(self.input)
