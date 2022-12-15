@@ -17,6 +17,16 @@ class Problem:
     def distance(sensor):
         return abs(sensor[0] - sensor[2]) + abs(sensor[1] - sensor[3])
 
+    def get_start_stop(self, n):
+        l = []
+        for s in self.sensors:
+            print(s)
+            if abs(s[1] - n) <= s[4]:
+                d = s[4] - abs(s[1] - n)
+                l.append((s[0] - d, s[0] + d))
+        return l
+
+
     def draw_line(self, n):
         m = set()
         b = set()
@@ -30,6 +40,22 @@ class Problem:
         #print(m, b)
         return len(m) - len(b)
 
+    def find_bacon(self, start, stop):
+        print(self.sensors)
+        for y in range(start, stop + 1):
+            s = sorted(self.get_start_stop(y), key=lambda x:x[0])
+            i = start
+            for p in s:
+                if p[1] < i:
+                    continue
+                if p[0] > i:
+                    print(y, s)
+                    return y
+                if p[1] > stop:
+                    break
+                i = p[1]
+        return 0
+
 
 class Solver:
     def __init__(self, input) -> None:
@@ -42,10 +68,13 @@ class Solver:
 
     def solve(self, part=1):
         self.problem = Problem(self.parse_input())
-        return self.problem.draw_line(2000000)
+        if part==1:
+            return self.problem.draw_line(2000000)
+        else:
+            return self.problem.find_bacon(0, 4000000)
 
 
 f = open(__file__[:-3] + '.test', 'r')
 solver = Solver(f.read().strip().split('\n'))
-print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+#print("Puzzle 1: ", solver.solve())
+print("Puzzle 2: ", solver.solve(2))
