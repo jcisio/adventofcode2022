@@ -5,7 +5,6 @@ https://adventofcode.com/2022/day/15
 """
 import functools
 import parse
-import re
 
 
 class Problem:
@@ -31,7 +30,7 @@ class Problem:
         m = functools.reduce((lambda x, y: x + y), [list(range(s[0], s[1] + 1)) for s in self.get_start_stop(n)])
         return len(set(m)) - len(b)
 
-    def find_bacon(self, start, stop):
+    def find_beacon(self, start, stop):
         for y in range(start, stop + 1):
             s = sorted(self.get_start_stop(y), key=lambda x: x[0])
             i = start
@@ -56,7 +55,7 @@ class Solver:
         if part == 1:
             return problem.draw_line(y)
         else:
-            return problem.find_bacon(0, m)
+            return problem.find_beacon(0, m)
 
 
 f = open(__file__[:-3] + '.in', 'r')
