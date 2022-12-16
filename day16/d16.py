@@ -3,8 +3,8 @@ Advent Of Code
 --- Day 16: Proboscidea Volcanium ---
 https://adventofcode.com/2022/day/16
 """
-import functools
 import parse
+from itertools import combinations
 
 
 class Problem:
@@ -70,6 +70,15 @@ class Problem:
         valves = [v for v in self.valves if self.valves[v]['rate']>0]
         return self.optimize(0, 0, 30, 'AA', valves)
 
+    def solve2(self):
+        valves = set([v for v in self.valves if self.valves[v]['rate']>0])
+        m = 0
+        # Could also work with smaller range e.g. (3,13) but it doesn't save much time.
+        for r in range(1, len(valves)):
+            for s in combinations(valves, r):
+                m = max(m, self.optimize(0, 0, 26, 'AA', set(s)) + self.optimize(0, 0, 26, 'AA', valves.difference(s)))
+        return m
+
 
 class Solver:
     def __init__(self, input) -> None:
@@ -86,10 +95,10 @@ class Solver:
 
     def solve(self, part=1):
         problem = Problem(self.parse_input())
-        return problem.solve()
+        return problem.solve() if part==1 else problem.solve2()
 
 
 f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 2: ", solver.solve(2))
