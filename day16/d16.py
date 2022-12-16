@@ -46,26 +46,24 @@ class Problem:
         diff = self.d[(current, v2)]*self.valves[v1]['rate'] - self.d[(current, v1)]*self.valves[v2]['rate']
         return -1 if diff < 0 else 1 if diff > 0 else 1
 
+    def find_next(self, i, current, valves):
+        return [v for v in valves if self.d[(current,v)] < i-1]
+        #return [max([v for v in valves if self.d[(current,v)] < i-1], key=functools.cmp_to_key(lambda v1,v2: self.cmp(current,v1,v2)))]
+
     def optimize(self, rate, total, i, current, valves):
-        print(valves)
-        while i > 1:
-            try:
-                next = max([v for v in valves if self.d[(current,v)] < i-1], key=functools.cmp_to_key(lambda v1,v2: self.cmp(current,v1,v2)))
-            except:
-                # Nothing else.
-                total += rate * i
-                break
-            valves.remove(next)
+        next_valves = self.find_next(i, current, valves)
+        if not next_valves:
+            # Nothing else.
+            total += rate * i
+            return total
+        candidates = {}
+        for next in next_valves:
             d = self.d[(current, next)]
-            print(f'{i} seconds left, current pressure {rate}, take {d} seconds to {next}, open at {30+d+1-i}')
-            total += rate*min(d+1, i)
-            if d+1 >= i:
-                # Don't have time to move
-                break
-            i -= d + 1
-            rate += self.valves[next]['rate']
-            current = next
-        return total
+            #print(f'{i} seconds left, current pressure {rate}, take {d} seconds to {next}, open at {30+d+1-i}')
+            new_valves = valves.copy()
+            new_valves.remove(next)
+            candidates[next] = self.optimize(rate + self.valves[next]['rate'], total + rate*(d+1), i - d - 1, next, new_valves)
+        return max(candidates.values())
 
 
     def solve(self):
