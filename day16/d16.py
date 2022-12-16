@@ -10,6 +10,7 @@ import parse
 class Problem:
     def __init__(self, valves) -> None:
         self.valves = valves
+        self.current = None
         self.d = self.compute_distances()
 
     def compute_distances(self):
@@ -29,32 +30,34 @@ class Problem:
             i += 1
         return d
 
+    def cmp(self, v1, v2):
+        diff = self.d[(self.current, v2)]*self.valves[v1]['rate'] - self.d[(self.current, v1)]*self.valves[v2]['rate']
+        return -1 if diff < 0 else 1 if diff > 0 else 1
 
     def solve(self):
         i = 30
-        rate = 0
-        total = 0
-        current = 'AA'
+        self.rate = 0
+        self.total = 0
+        self.current = 'AA'
         while i > 1:
             try:
-                next = max([v for v in self.valves if not self.valves[v]['open']], key=lambda v:self.valves[v]['rate']*(i - 1 - self.d[(current, v)]))
+                next = max([v for v in self.valves if not self.valves[v]['open']], key=functools.cmp_to_key(self.cmp))
             except:
-                print('Nothing')
                 # Nothing else.
-                total += rate*i
+                self.total += self.rate*i
                 break
-            if i == 30: next='DD'
-            d = self.d[(current, next)]
-            print(f'{i} seconds left, current pressure {rate}, next is {next}, take {d} seconds to go')
-            total += rate*min(d+1, i)
+#            if i == 28: next='BB'
+            d = self.d[(self.current, next)]
+            print(f'{i} seconds left, current pressure {self.rate}, take {d} seconds to {next}, open at {30+d+1-i}')
+            self.total += self.rate*min(d+1, i)
             if d+1 >= i:
                 # Don't have time to move
                 break
             i -= d + 1
-            rate += self.valves[next]['rate']
+            self.rate += self.valves[next]['rate']
             self.valves[next]['open'] = True
-            current = next
-        return total
+            self.current = next
+        return self.total
 
 
 class Solver:
@@ -67,7 +70,7 @@ class Solver:
         p = parse.compile('Valve {} has flow rate={:d}; {:w} {:w} to {:w} {}')
         for line in self.input:
             r = p.parse(line)
-            valves[r[0]] = {'rate': r[1], 'open': False, 'next': r[5].split(', ')}
+            valves[r[0]] = {'rate': r[1], 'open': r[1]==0, 'next': r[5].split(', ')}
         return valves
 
     def solve(self, part=1):
