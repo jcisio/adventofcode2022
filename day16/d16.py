@@ -47,28 +47,73 @@ class Problem:
         return -1 if diff < 0 else 1 if diff > 0 else 1
 
     def find_next(self, i, current, valves):
-        return [v for v in valves if self.d[(current,v)] < i-1]
-        #return [max([v for v in valves if self.d[(current,v)] < i-1], key=functools.cmp_to_key(lambda v1,v2: self.cmp(current,v1,v2)))]
+        targets = [v for v in valves if self.d[(current,v)] < i-1]
+        if not targets:
+            return []
+        return targets
+        # The greedy solution is a good way to debug. But result is sub optimal.
+        #return [max(targets, key=functools.cmp_to_key(lambda v1,v2: self.cmp(current,v1,v2)))]
 
-    def optimize(self, rate, total, i, current, valves):
-        next_valves = self.find_next(i, current, valves)
-        if not next_valves:
-            # Nothing else.
-            total += rate * i
-            return total
-        candidates = {}
-        for next in next_valves:
-            d = self.d[(current, next)]
-            #print(f'{i} seconds left, current pressure {rate}, take {d} seconds to {next}, open at {30+d+1-i}')
-            new_valves = valves.copy()
-            new_valves.remove(next)
-            candidates[next] = self.optimize(rate + self.valves[next]['rate'], total + rate*(d+1), i - d - 1, next, new_valves)
-        return max(candidates.values())
+    def optimize(self, rate, total, seconds, person, valves, j=0, substep=True):
+        #print(f'{seconds} seconds left, current pressure {rate}, person {person}, substep {substep}')
+
+        if seconds <= 1:
+            return total + rate*seconds
+
+        pp = person.copy()
+
+        # If ALL are moving, in this step, just keep all moving.
+        if min([p[1] for p in pp]) > 1:
+            for k,p in enumerate(pp):
+                pp[k] = (p[0], p[1] - 1, p[2]+1)
+            return self.optimize(rate, total + rate, seconds - 1, pp, valves, j, substep)
+
+        if substep and len(set([p[2] for p in pp])) == 1:
+            # End of substep if all finish their round.
+            # Update the rate for who arrived.
+            for p in pp:
+                if p[1] == 1:
+                    rate += self.valves[p[0]]['rate'] if p[0] in self.valves else 0
+            #print(f'New step. {seconds} seconds left, current pressure {rate}, person {pp}')
+            return self.optimize(rate, total + rate, seconds - 1, pp, valves, j, False)
+
+        # Otherwise, if at least one arrives at a valve. Find his new target.
+
+        # Decide who acts first in this (sub)step? Support max=2 person.
+        if len(pp) == 1:
+            # Only 1
+            n = 0
+        else:
+            # Only target j if they have not completed their substep.
+            n = j if pp[j][2] <= pp[1-j][2] else 1-j
+
+        # If this person is moving, let keep them moving and go to next person.
+        if pp[n][1] > 1 :
+            pp[n] = (pp[n][0], pp[n][1] - 1, pp[n][2]+1)
+            return self.optimize(rate, total, seconds, pp, valves, j, True)
+        else:
+            # -- The most complicated part. --
+            # Arrive now.
+            next_valves = self.find_next(seconds, pp[n][0], valves)
+            if not next_valves:
+                return total + rate * seconds
+
+            candidates = {}
+            for next in next_valves:
+                pp[n] = (next, self.d[(pp[n][0], next)] + 1, pp[n][2]+1)
+                #print(f'Take {pp[n][1]} seconds for person {n} to {next}')
+                new_valves = valves.copy()
+                new_valves.remove(next)
+                candidates[next] = self.optimize(rate, total, seconds, pp, new_valves, 1-n, True)
+            return max(candidates.values())
 
 
-    def solve(self):
+    def solve(self, n, seconds):
         valves = [v for v in self.valves if self.valves[v]['rate']>0]
-        return self.optimize(0, 0, 30, 'AA', valves)
+        #print(self.d)
+        # (valve_to_go_to, time_to_arrival)
+        person = [('AA', 0, 0) for _ in range(n)]
+        return max([self.optimize(0, 0, seconds, person, valves, j) for j in range(n)])
 
 
 class Solver:
@@ -84,12 +129,12 @@ class Solver:
             valves[r[0]] = {'rate': r[1], 'next': r[5].split(', ')}
         return valves
 
-    def solve(self, part=1):
+    def solve(self, n, seconds):
         problem = Problem(self.parse_input())
-        return problem.solve()
+        return problem.solve(n, seconds)
 
 
 f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
-print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 1: ", solver.solve(1, 30))
+#print("Puzzle 2: ", solver.solve(2, 26))
