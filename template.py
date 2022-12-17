@@ -3,7 +3,7 @@ import parse
 
 
 class Problem:
-    def __init__(self) -> None:
+    def __init__(self, input) -> None:
         pass
 
     def solve(self):
