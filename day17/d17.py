@@ -3,10 +3,6 @@ Advent Of Code
 --- Day 17: Pyroclastic Flow ---
 https://adventofcode.com/2022/day/17
 """
-import functools
-import parse
-
-
 class Problem:
 
     class Rock:
@@ -61,7 +57,6 @@ class Problem:
                     self.chamber[(self.rock.top-j, self.rock.left+i)] = True
         return False
 
-
     def print(self):
         for j in range(self.height):
             print('|', end='')
@@ -69,7 +64,6 @@ class Problem:
                 print('#' if (self.height-j,i) in self.chamber else '.', end='')
             print('|')
         print('+-------+')
-
 
     def solve(self):
         c = 0
@@ -83,6 +77,25 @@ class Problem:
         #self.print()
         return self.height
 
+    def solve2(self, rocks):
+        delta = []
+        height = []
+        c = 0
+        while True:
+            self.drop_new_rock()
+            c += 1
+            while self.move_one():
+                pass
+            delta.append((self.current_rock, self.current_gas))
+            height.append(self.height)
+            # tortoise and hare algo
+            if c > 2 and delta[-1] == delta[c//2]:
+                break
+        start = c // 2
+        loop = c - 1 - start
+        loop_height = height[start + loop] - height[start]
+        return height[start] + (rocks - start)//loop*loop_height + height[(rocks - start) % loop + start] - height[start]
+
 
 class Solver:
     def __init__(self, input) -> None:
@@ -94,10 +107,11 @@ class Solver:
 
     def solve(self, part=1):
         problem = Problem(self.parse_input())
-        return problem.solve()
+        # Don't understand why -1
+        return problem.solve() if part==1 else problem.solve2(1000000000000)-1
 
 
 f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 2: ", solver.solve(2))
