@@ -4,46 +4,43 @@ Advent Of Code
 https://adventofcode.com/2022/day/18
 """
 class Problem:
+    D = 3
     def __init__(self, input) -> None:
         self.cubes = input
-        self.delta = [(-1,0,0),(1,0,0),(0,-1,0),(0,1,0),(0,0,-1),(0,0,1)]
+        self.delta = []
+        for i in range(self.D):
+            for j in [-1, 1]:
+                l = [0]*self.D
+                l[i] = j
+                self.delta.append(tuple(l))
 
     def find_adjacent(self, cube) -> list:
-        adj = [(cube[0]+x[0], cube[1]+x[1], cube[2]+x[2]) for x in self.delta]
+        adj = [tuple([cube[j]+x[j] for j in range(self.D)]) for x in self.delta]
         return [x for x in adj if x not in self.cubes]
 
     def solve(self):
         return sum([len(self.find_adjacent(cube)) for cube in self.cubes])
 
     def solve2(self):
-        dim = [(min([c[i] for c in self.cubes]), max([c[i] for c in self.cubes])) for i in range(3)]
-        outside = set()
+        # Strict outer bounds.
+        dim = [(min([c[i] for c in self.cubes])-1, max([c[i] for c in self.cubes])+1) for i in range(self.D)]
         # Flood fill.
         # First by finding the cubes that we are sure that they are outside.
-        for x in range(dim[0][0], dim[0][1]+1):
-            for y in range(dim[1][0], dim[1][1]+1):
-                outside = outside.union(set([(x,y,z) for z in dim[2] if (x,y,z) not in self.cubes]))
-        for x in range(dim[0][0], dim[0][1]+1):
-            for z in range(dim[2][0], dim[2][1]+1):
-                outside = outside.union(set([(x, y, z) for y in dim[1] if (x, y, z) not in self.cubes]))
-        for z in range(dim[2][0], dim[2][1] + 1):
-            for y in range(dim[1][0], dim[1][1] + 1):
-                outside = outside.union(set([(x, y, z) for x in dim[0] if (x, y, z) not in self.cubes]))
+        outside = set([tuple([dim[j][0] for j in range(self.D)])])
         found = True
         while found:
             found_outside = set()
             for c in outside:
                 for adj in self.find_adjacent(c):
-                    if all([dim[i][0] <= adj[i] <= dim[i][1] for i in range(3)]):
-                        if adj not in outside:
-                            found_outside.add(adj)
+                    if all([dim[i][0] <= adj[i] <= dim[i][1] for i in range(self.D)]) and adj not in outside:
+                        found_outside.add(adj)
             found = len(found_outside) > 0
-            outside = outside.union(found_outside)
+            outside |= found_outside
 
         cubes = []
         for c in self.cubes:
             cubes = cubes + self.find_adjacent(c)
-        return len([c for c in cubes if c in outside or any([c[i]>dim[i][1] or c[i]<dim[i][0] for i in range(3)])])
+        return len([c for c in cubes if c in outside])
 
 
 class Solver:
@@ -56,10 +53,10 @@ class Solver:
 
     def solve(self, part=1):
         problem = Problem(self.parse_input())
-        return problem.solve() if part==1 else problem.solve2()
+        return problem.solve() if part == 1 else problem.solve2()
 
 
-f = open(__file__[:-3] + '.in', 'r')
+f = open(__file__[:-3] + '.test', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
 print("Puzzle 2: ", solver.solve(2))
