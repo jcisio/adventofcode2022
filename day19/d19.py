@@ -3,7 +3,6 @@ Advent Of Code
 --- Day 19: Not Enough Minerals ---
 https://adventofcode.com/2022/day/19
 """
-import functools
 import parse
 
 
@@ -50,7 +49,19 @@ class Problem:
                 new_robot = None
             return new_robot
 
+        def get_upper_bound(self, robots, resource, minutes):
+            '''Return the upper bound number of geodes that could be build'''
+            # If we don't have enought obsidian, build them first.
+            if resource['obsidian'] < self.geode[1]:
+                minutes -= 1
+            # Return the number if we build one geode-cracking every minute.
+            N = robots['geode']
+            return (N+minutes)*(N+minutes-1)//2 - N*(N-1)//2
+
         def build_geodes(self, robots, resource, steps, minutes):
+            # Worth moving further?
+            if self.max[0] and minutes <=20 and self.get_upper_bound(robots, resource, minutes) <= self.max[0]['geode']:
+                pass
             resource = resource.copy()
             robots = robots.copy()
             new_robot = self.build_robot(resource, steps[-1])
@@ -68,14 +79,18 @@ class Problem:
             options = []
             if resource['ore'] >= self.geode[0] and resource['obsidian'] >= self.geode[1]:
                 options.append(4)
-            elif resource['ore'] >= self.obsidian[0] and resource['clay'] >= self.obsidian[1]:
-                options.append(3)
             else:
-                options.append(0)
-                if resource['ore'] >= self.clay:
+                if resource['ore'] >= self.obsidian[0] and resource['clay'] >= self.obsidian[1] and robots['obsidian'] < self.geode[1]:
+                    options.append(3)
+                if resource['ore'] >= self.clay and robots['clay'] < self.obsidian[1]:
                     options.append(2)
-                elif resource['ore'] >= self.ore:
+                if resource['ore'] >= self.ore and robots['ore'] < max(self.clay, self.obsidian[0], self.geode[0]):
                     options.append(1)
+                if robots['ore'] <= min(self.clay, self.obsidian[0], self.geode[0]):
+                    options.append(0)
+            if not options:
+                # Need to do something anyway.
+                options.append(0)
             max_geodes = 0
             for option in options:
                 steps.append(option)
@@ -111,21 +126,21 @@ class Problem:
                     robots[new_robot] += 1
                     print(f'The new {new_robot} robot is ready, you now have {robots[new_robot]} of them.')
                 print('')
+            return resource['geode']
 
         def max_geodes(self) -> int:
             robots = {'ore': 1, 'clay': 0, 'obsidian': 0, 'geode': 0}
             resource = {'ore': 0, 'clay': 0, 'obsidian': 0, 'geode': 0}
             steps = [0]
             self.build_geodes(robots, resource, steps, Problem.MINUTES)
-            self.print()
-            return 0
+            return self.print()
 
-    def __init__(self, blueprints: list[Blueprint]) -> None:
+    def __init__(self, blueprints: list) -> None:
         self.blueprints = blueprints
 
     def max_geodes(self, blueprint: Blueprint) -> int:
-        print(blueprint.max_geodes())
-        return 0
+        print('Computing blueprint...')
+        return blueprint.max_geodes()
 
     def solve(self):
         return self.max_geodes(self.blueprints[0])
