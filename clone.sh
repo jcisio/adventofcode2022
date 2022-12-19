@@ -5,7 +5,7 @@ cd day$1
 day=$(echo $1 | sed 's/^0//')
 base_url="https://adventofcode.com/2022/day/${day}"
 cookies="cookie: session=$AOC2022SID"
-curl $base_url -s -H $cookies | pandoc -f html -t plain | sed -n '/^--- Day/,$p' > tmp
+curl $base_url -s -H "$cookies" | pandoc -f html -t plain | sed -n '/^--- Day/,$p' > tmp
 
 # Include only a link to the puzzle text
 # https://www.reddit.com/r/adventofcode/wiki/faqs/copyright/puzzle_texts/
@@ -22,7 +22,7 @@ git add d$1.in
 
 # Write real input in a test file, do not commit it.
 # https://www.reddit.com/r/adventofcode/wiki/faqs/copyright/inputs/
-curl $base_url"/input" -s -H $cookies > d$1.test
+curl $base_url"/input" -s -H "$cookies" > d$1.test
 
 git commit -m "Day $1"
 cat ../template.py >> d$1.py
