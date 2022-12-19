@@ -19,7 +19,7 @@ class Problem:
             self.clay = r.fixed[2]
             self.obsidian = (r.fixed[3], r.fixed[4])
             self.geode = (r.fixed[5], r.fixed[6])
-            self.max = None
+            self.max = (None, None)
 
         @staticmethod
         def cmp(a, b):
@@ -31,11 +31,7 @@ class Problem:
                     return 1
             return 0
 
-        def build_geodes(self, robots, resource, steps, minutes):
-            new_robot = None
-            resource = resource.copy()
-            robots = robots.copy()
-            option = steps[-1]
+        def build_robot(self, resource, option):
             if option == 1:
                 new_robot = 'ore'
                 resource['ore'] -= self.ore
@@ -50,15 +46,23 @@ class Problem:
                 new_robot = 'geode'
                 resource['ore'] -= self.geode[0]
                 resource['obsidian'] -= self.geode[1]
+            else:
+                new_robot = None
+            return new_robot
+
+        def build_geodes(self, robots, resource, steps, minutes):
+            resource = resource.copy()
+            robots = robots.copy()
+            new_robot = self.build_robot(resource, steps[-1])
             for r in robots:
                 resource[r] += robots[r]
             if new_robot:
                 robots[new_robot] += 1
             # And next step?
             if minutes == 1:
-                if not self.max or self.cmp(self.max, resource) == -1:
-                    self.max = resource
-                    print(steps, robots, resource)
+                if not self.max[0] or self.cmp(self.max[0], resource) == -1:
+                    self.max = (resource, steps.copy())
+#                    print(steps, robots, resource)
                 return (robots, resource)
 
             options = []
@@ -70,6 +74,8 @@ class Problem:
                 options.append(0)
                 if resource['ore'] >= self.clay:
                     options.append(2)
+                elif resource['ore'] >= self.ore:
+                    options.append(1)
             max_geodes = 0
             for option in options:
                 steps.append(option)
@@ -81,11 +87,38 @@ class Problem:
                 steps.pop()
             return (max_robots, max_resource)
 
+        def print(self):
+            m = 0
+            robots = {'ore': 1, 'clay': 0, 'obsidian': 0, 'geode': 0}
+            resource = {'ore': 0, 'clay': 0, 'obsidian': 0, 'geode': 0}
+            for option in self.max[1]:
+                m += 1
+                print(f'== Minute {m} ==')
+                new_robot = self.build_robot(resource, option)
+                if option == 1:
+                    print(f'Spend {self.ore} ore to start building an ore-collecting robot.')
+                elif option == 2:
+                    print(f'Spend {self.clay} ore to start building a clay-collecting robot.')
+                elif option == 3:
+                    print(f'Spend {self.obsidian[0]} ore and {self.obsidian[1]} clay to start building an obsidian-collecting robot.')
+                elif option == 4:
+                    print(f'Spend {self.geode[0]} ore and {self.geode[1]} obsidian to start building an geode-cracking robot.')
+                for r in robots:
+                    if robots[r] > 0:
+                        resource[r] += robots[r]
+                        print(f'{robots[r]} {r}-kissing robot collect collect {robots[r]} {r}; you now have {resource[r]} {r}.')
+                if new_robot:
+                    robots[new_robot] += 1
+                    print(f'The new {new_robot} robot is ready, you now have {robots[new_robot]} of them.')
+                print('')
+
         def max_geodes(self) -> int:
             robots = {'ore': 1, 'clay': 0, 'obsidian': 0, 'geode': 0}
             resource = {'ore': 0, 'clay': 0, 'obsidian': 0, 'geode': 0}
             steps = [0]
-            return self.build_geodes(robots, resource, steps, Problem.MINUTES)
+            self.build_geodes(robots, resource, steps, Problem.MINUTES)
+            self.print()
+            return 0
 
     def __init__(self, blueprints: list[Blueprint]) -> None:
         self.blueprints = blueprints
