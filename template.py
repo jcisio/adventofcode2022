@@ -3,8 +3,9 @@ import parse
 
 
 class Problem:
+    DEBUG=0
     def __init__(self, input) -> None:
-        pass
+        self.printer = print if self.DEBUG else lambda x: None
 
     def solve(self):
         return 0
@@ -13,7 +14,6 @@ class Problem:
 class Solver:
     def __init__(self, input) -> None:
         self.input = input
-        pass
 
     def parse_input(self):
         return self.input

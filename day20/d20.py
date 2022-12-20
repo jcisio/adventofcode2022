@@ -4,13 +4,14 @@ Advent Of Code
 https://adventofcode.com/2022/day/20
 """
 class Problem:
+    DEBUG=0
     def __init__(self, input) -> None:
         self.L = len(input)
         self.numbers = input
         # Position of L numbers:
         # current[k] is the original index of number currently at position k.
         self.current = list(range(self.L))
-        self.printer = lambda x: None
+        self.printer = print if self.DEBUG else lambda x: None
 
     def print(self):
         self.printer(self.current)
@@ -41,17 +42,6 @@ class Problem:
         self.printer(f'0 is at position {j}')
         return sum([self.numbers[self.current[(j + i) % self.L]] for i in [1000, 2000, 3000]])
 
-'''
-1, 2, -3, 3, -2, 0, 4
-
-1 moves after 2:
-[1, 0, 2, 3, 4, 5, 6]
-2, 1, -3, 3, -2, 0, 4
-
-2 moves after - 3  (1 to 2)
-[0, 2, 1, 3, 4, 5, 6]
-1, -3, 2, 3, -2, 0, 4
-'''
 
 class Solver:
     def __init__(self, input) -> None:
