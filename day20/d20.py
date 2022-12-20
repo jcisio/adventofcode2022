@@ -16,26 +16,30 @@ class Problem:
         self.printer(self.current)
         self.printer(', '.join(map(str, [self.numbers[self.current[i]] for i in range(self.L)])))
 
-    def solve(self):
+    def mix(self):
         L = len(self.numbers)
-        self.print()
         for i, n in enumerate(self.numbers):
             k = self.current.index(i)
-            j = (k + n) % (L-1)
+            j = (k + n) % (L - 1)
             if j == 0:
-                j = L-1
+                j = L - 1
             if k == j:
                 self.printer(f'\n{n} does not move')
             else:
                 self.printer(f'\n{n} moves after {self.numbers[self.current[j if j > k else j-1]]} (position {k} moves to {j}):')
                 if j < k:
-                    self.current = self.current[0:j] + [self.current[k]] + self.current[j:k] + self.current[k+1:L]
+                    self.current = self.current[0:j] + [self.current[k]] + self.current[j:k] + self.current[k + 1:L]
                 elif j > k:
-                    self.current = self.current[0:k] + self.current[k + 1:j+1] + [self.current[k]] + self.current[j+1:L]
+                    self.current = self.current[0:k] + self.current[k + 1:j + 1] + [self.current[k]] + self.current[j + 1:L]
             self.print()
+
+    def solve(self, n_mix=1):
+        self.print()
+        for _ in range(n_mix):
+            self.mix()
         j = self.current.index(self.numbers.index(0))
         self.printer(f'0 is at position {j}')
-        return sum([self.numbers[self.current[(j + i) % L]] for i in [1000, 2000, 3000]])
+        return sum([self.numbers[self.current[(j + i) % self.L]] for i in [1000, 2000, 3000]])
 
 '''
 1, 2, -3, 3, -2, 0, 4
@@ -58,11 +62,15 @@ class Solver:
         return list(map(int, self.input))
 
     def solve(self, part=1):
-        problem = Problem(self.parse_input())
-        return problem.solve()
+        input = self.parse_input()
+        if part==1:
+            problem = Problem(input)
+            return problem.solve(1)
 
+        problem = Problem(list(map(lambda x: x * 811589153, input)))
+        return problem.solve(10)
 
-f = open(__file__[:-3] + '.in', 'r')
+f = open(__file__[:-3] + '.test', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 2: ", solver.solve(2))
