@@ -22,7 +22,7 @@ class Monkey:
             self._val = int(attr)
         # Reverse dependencies
         self.dep = set()
-        self.monkeys[name] = self
+        Monkey.monkeys[name] = self
 
     @staticmethod
     def find(name: str) -> Monkey:
@@ -58,23 +58,21 @@ class Problem:
 
     def solve2(self):
         for m in Monkey.find_all():
-            for a in m.arg:
-                Monkey.find(a).dep.add(m.name)
+            list(map(lambda a: Monkey.find(a).dep.add(m.name), m.arg))
         dep = set()
         check = set(['humn'])
         while check:
             m = check.pop()
             dep.add(m)
-            for d in Monkey.find(m).dep:
-                check.add(d)
+            check |= Monkey.find(m).dep
         root = Monkey.find('root')
         self.printer(dep)
         if root.arg[0] in dep and root.arg[1] in dep:
             raise ValueError('Can not solve easily..')
         i = 0 if root.arg[0] in dep else 1
-        m = Monkey.find(root.arg[i])
         val = Monkey.find(root.arg[1-i]).val
         self.printer(f'Root need to yell {val}')
+        m = Monkey.find(root.arg[i])
         while m.name != 'humn':
             i = 1 if m.arg[0] in dep else 0
             arg = Monkey.find(m.arg[i]).val
@@ -98,10 +96,10 @@ class Solver:
 
     def solve(self, part=1):
         problem = Problem()
-        return problem.solve() if part==1 else problem.solve2()
+        return problem.solve() if part == 1 else problem.solve2()
 
 
-f = open(__file__[:-3] + '.test', 'r')
+f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
 print("Puzzle 2: ", solver.solve(2))
