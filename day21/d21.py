@@ -3,63 +3,105 @@ Advent Of Code
 --- Day 21: Monkey Math ---
 https://adventofcode.com/2022/day/21
 """
+from __future__ import annotations
 import re
+
+class Monkey:
+    monkeys = dict()
+
+    def __init__(self, definition) -> None:
+        name, attr = definition.split(': ')
+        self.name = name
+        r = re.findall('[^\d ]+', attr)
+        if r:
+            self.op = r[1]
+            self.arg = (r[0], r[2])
+            self._val = None
+        else:
+            self.arg = ()
+            self._val = int(attr)
+        # Reverse dependencies
+        self.dep = set()
+        self.monkeys[name] = self
+
+    @staticmethod
+    def find(name: str) -> Monkey:
+        return Monkey.monkeys[name]
+
+    @staticmethod
+    def find_all() -> list[Monkey]:
+        return Monkey.monkeys.values()
+
+    @property
+    def val(self):
+        if self._val != None:
+            return self._val
+        if self.op == '+':
+            self._val = self.find(self.arg[0]).val + self.find(self.arg[1]).val
+        elif self.op == '-':
+            self._val = self.find(self.arg[0]).val - self.find(self.arg[1]).val
+        elif self.op == '*':
+            self._val = self.find(self.arg[0]).val * self.find(self.arg[1]).val
+        elif self.op == '/':
+            self._val = self.find(self.arg[0]).val / self.find(self.arg[1]).val
+        else:
+            raise ValueError
+        return self._val
 
 
 class Problem:
-    class Monkey:
-        monkeys=dict()
-        def __init__(self, definition) -> None:
-            name, attr = definition.split(': ')
-            self.name = name
-            r = re.findall('[^\d ]+', attr)
-            if r:
-                self.op = r[1]
-                self.arg = (r[0], r[2])
-                self._val = None
-            else:
-                self._val = int(attr)
-            # Reverse dependencies
-            self.dep = set()
-            self.monkeys[name] = self
-
-        @staticmethod
-        def get(name: str):
-            return Problem.Monkey.monkeys[name]
-
-        @property
-        def val(self):
-            if self._val != None:
-                return self._val
-            if self.op == '+':
-                self._val = self.get(self.arg[0]).val + self.get(self.arg[1]).val
-            elif self.op == '-':
-                self._val = self.get(self.arg[0]).val - self.get(self.arg[1]).val
-            elif self.op == '*':
-                self._val = self.get(self.arg[0]).val * self.get(self.arg[1]).val
-            elif self.op == '/':
-                self._val = self.get(self.arg[0]).val / self.get(self.arg[1]).val
-            else:
-                raise ValueError
-            return self._val
-
     def __init__(self) -> None:
         self.printer = print if __debug__ else lambda *x: None
 
     def solve(self):
-        return int(Problem.Monkey.get('root').val)
+        return int(Monkey.find('root').val)
+
+    def solve2(self):
+        for m in Monkey.find_all():
+            for a in m.arg:
+                Monkey.find(a).dep.add(m.name)
+        dep = set()
+        check = set(['humn'])
+        while check:
+            m = check.pop()
+            dep.add(m)
+            for d in Monkey.find(m).dep:
+                check.add(d)
+        root = Monkey.find('root')
+        self.printer(dep)
+        if root.arg[0] in dep and root.arg[1] in dep:
+            raise ValueError('Can not solve easily..')
+        i = 0 if root.arg[0] in dep else 1
+        m = Monkey.find(root.arg[i])
+        val = Monkey.find(root.arg[1-i]).val
+        self.printer(f'Root need to yell {val}')
+        while m.name != 'humn':
+            i = 1 if m.arg[0] in dep else 0
+            arg = Monkey.find(m.arg[i]).val
+            self.printer(f'Inspecting monkey {m.name}: {m.arg[0]} {m.op} {m.arg[1]} value of {Monkey.find(m.arg[i]).name} is {arg}')
+            if m.op == '+':
+                val = val - arg
+            elif m.op == '-':
+                val = arg - val if i == 0 else val + arg
+            elif m.op == '*':
+                val = val / arg
+            elif m.op == '/':
+                val = arg / val if i == 0 else val * arg
+            m = Monkey.find(m.arg[1-i])
+            self.printer(f'{m.name} needs to yell {val}')
+        return int(val)
 
 
 class Solver:
     def __init__(self, input) -> None:
-        self.input = [Problem.Monkey(line) for line in input]
+        self.input = [Monkey(line) for line in input]
 
     def solve(self, part=1):
         problem = Problem()
         return problem.solve() if part==1 else problem.solve2()
 
 
-f = open(__file__[:-3] + '.in', 'r')
+f = open(__file__[:-3] + '.test', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 2: ", solver.solve(2))
