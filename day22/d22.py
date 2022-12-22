@@ -7,6 +7,7 @@ from __future__ import annotations
 
 
 class Problem:
+    DIR = '>v<^'
     def __init__(self, input) -> None:
         self.printer = print if __debug__ else lambda *x: None
         self.board, self.path = input
@@ -27,84 +28,70 @@ class Problem:
         self.current = 0
 
     def wrap(self, xy, d):
-        xy = (xy[0] + d[0], xy[1] + d[1])
-        if xy in self.board:
-            return xy, self.dir
         x, y = xy
+        if (x + d[0], y + d[1]) in self.board:
+            return (x + d[0], y + d[1]), self.dir
         if self.wrap_strategy == 1:
             if d[1] == 0:
-                j = 1 if x < self.mm[(0, 0, y)] else 0
+                j = 1 if x == self.mm[(0, 0, y)] else 0
                 x = self.mm[(0, j, y)]
             else:
-                j = 1 if y < self.mm[(1, 0, x)] else 0
+                j = 1 if y == self.mm[(1, 0, x)] else 0
                 y = self.mm[(1, j, x)]
             dir = self.dir
         else:
-            if d == (-1, 0):
-                # A
-                if 0 <= y < 50:
-                    x, y = 0, 199 - y
-                    dir = '>'
-                # B
-                elif 50 <= y < 100:
-                    x, y = y - 50, 100
-                    dir = 'v'
-                # C
-                elif 100 <= y < 150:
-                    x, y = 50, 199 - y
-                    dir = '<'
-                # D
-                elif 150 <= y:
-                    x, y = y - 100, 0
-                    dir = 'v'
-            elif d == (1, 0):
-                # E
-                if 0 <= y < 50:
-                    x, y = 99, 149 - y
-                    dir = '<'
-                # F
-                elif 50 <= y < 100:
-                    x, y = y, 49
-                    dir = '^'
-                # E again
-                elif 100 <= y < 150:
-                    x, y = 149, 149 - y
-                    dir = '<'
-                # G
-                elif 150 <= y:
-                    x, y = y - 100, 149
-                    dir = '^'
-            elif d == (0, -1):
-                # B again
-                if 0 <= x < 50:
-                    x, y = 50, 50 + x
-                    dir = '>'
-                # D again
-                elif 50 <= x < 100:
-                    x, y = 0, 100 + x
-                    dir = '>'
-                # H
-                elif 100 <= x < 150:
-                    x, y = x - 100, 199
-                    dir = '^'
-            elif d == (0, 1):
-                # H again
-                if 0 <= x < 50:
-                    x, y = x + 100, 0
-                    dir = 'v'
-                # G again
-                elif 50 <= x < 100:
-                    x, y = 49, 100 + x
-                    dir = '<'
-                # F again
-                elif 100 <= x < 150:
-                    x, y = 99, x - 50
-                    dir = '<'
+            M = 50
+            zones = [
+                # position, mapping right/bottom/left/top each is (zone, rotate CCW)
+                ((1,0), None, None, (4, 180), (5, 90)),
+                ((2,0), (3, 180), (2, 90), None, (5,0)),
+                ((1,1), (1, 270), None, (4, 270), None),
+                ((1,2), (1, 180), (5, 90), None, None),
+                ((0,2), None, None, (0, 180), (2, 90)),
+                ((0,3), (3, 270), (1, 0), (0, 270), None)
+            ]
+            for j in range(6):
+                z = zones[j]
+                if z[0][0] * M <= x < (z[0][0] + 1) * M and z[0][1] * M <= y < (z[0][1] + 1) * M:
+                    break
+            else:
+                raise ValueError(f'Zone not found for {xy}')
+            # Find neighbor
+            neighbor = z[[(1,0),(0,1),(-1,0),(0,-1)].index(d)+1]
+            zz = z[0] # zone position
+            zn = zones[neighbor[0]][0] # zone position
+            rn = neighbor[1] # rotate
+            dx, dy = x - zz[0]*M, y - zz[1]*M # delta from zone
+            sx, sy = zn[0]*M, zn[1]*M # zone border
+            D = M-1
+            dir = self.DIR[(self.DIR.index(self.dir) + rn//90) % 4]
+            if rn == 0:
+                if d[0] == 0:
+                    x, y = dx + sx, sy + (0 if d[1] == 1 else D)
+                elif d[1] == 0:
+                    x, y = sx + (0 if d[1] == 1 else D), dy + sy
+            elif rn == 90:
+                if d[0] == 0:
+                    x, y = sx + (0 if d[1] == -1 else D), dx + sy
+                elif d == (-1,0):
+                    x, y = sx + D - dy, sy+D
+                elif d == (1, 0):
+                    x, y = sy + D - dx, sy
+            elif rn == 180:
+                if d[0] == 0:
+                    x, y = sx + D - dx, sy + (0 if d[1] == -1 else D)
+                elif d[1] == 0:
+                    x, y = sx + (0 if d[1] == -1 else D), sy + D - dy
+            elif rn == 270:
+                if d[0] == 0:
+                    x, y = sx + (0 if d[1] == 1 else D), sy + D - dx
+                elif d[1] == 0:
+                    x, y = sx + dy, sy + (0 if d[1] == -1 else D)
         self.printer(f'Wrap {xy} {d} to ({x}, {y}) {dir}')
         return (x, y), dir
 
     def ahead(self):
-        d = ((-1, 0), (1, 0), (0, -1), (0, 1))['<>^v'.index(self.dir)]
+        d = ((1, 0), (0, 1), (-1, 0), (0, -1))[self.DIR.index(self.dir)]
         return self.wrap(self.xy, d)
 
     def next(self):
@@ -120,8 +107,7 @@ class Problem:
                 self.xy, self.dir = xy, dir
             self.printer(f'  current position {self.xy} {self.dir}')
         else:
-            s = '<^>v'
-            self.dir = s[(s.index(self.dir) + (-1 if c == 'L' else 1)) % 4]
+            self.dir = self.DIR[(self.DIR.index(self.dir) + (-1 if c == 'L' else 1)) % 4]
             self.printer(f'At {self.xy}: turn {c}, new direction is {self.dir}')
         self.current += 1
         return True
@@ -129,7 +115,7 @@ class Problem:
     def solve(self):
         while self.next():
             pass
-        score = 1000 * (self.xy[1] + 1) + 4 * (self.xy[0] + 1) + '>v<^'.index(self.dir)
+        score = 1000 * (self.xy[1] + 1) + 4 * (self.xy[0] + 1) + self.DIR.index(self.dir)
 
         return score
 
@@ -163,5 +149,5 @@ class Solver:
 
 f = open(__file__[:-3] + '.test', 'r')
 solver = Solver(f.read().rstrip().split('\n'))
-print("Puzzle 1: ", solver.solve())
+#print("Puzzle 1: ", solver.solve())
 print("Puzzle 2: ", solver.solve(2))
