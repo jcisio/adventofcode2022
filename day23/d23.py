@@ -27,7 +27,7 @@ class Problem:
             if self.is_empty(props[(next + i)%4]):
                 return props[(next + i) % 4][1], (next + i) % 4
 
-    def move(self):
+    def move(self) -> int:
         self.printer('== Next roundd ==')
         n = {}
         p = {}
@@ -37,16 +37,19 @@ class Problem:
             if p[elve]:
                 self.printer(f'Elve {elve} proposes to move to {d[p[elve][1]]} {p[elve][0]}')
                 n[p[elve][0]] = n[p[elve][0]] + 1 if p[elve][0] in n else 1
+        moves = 0
         for elve in list(self.elves):
             if p[elve]:
                 if n[p[elve][0]] == 1:
                     self.printer(f'Elve {elve} moves to {d[p[elve][1]]} {p[elve][0]}')
                     self.elves[p[elve][0]] = (p[elve][1] + 1) % 4
                     del self.elves[elve]
+                    moves += 1
                 else:
                     self.elves[elve] = (p[elve][1] + 1) % 4
         self.round += 1
         self.print()
+        return moves
 
     def mm(self):
         M = len(self.elves) + 1000
@@ -71,6 +74,12 @@ class Problem:
         xmin, xmax, ymin, ymax = self.mm()
         return (xmax - xmin + 1) * (ymax - ymin + 1) - len(self.elves)
 
+    def solve2(self):
+        rounds = 1
+        while self.move() > 0:
+            rounds += 1
+        return rounds
+
 
 class Solver:
     def __init__(self, input) -> None:
@@ -82,11 +91,11 @@ class Solver:
         self.input = elves
 
     def solve(self, part=1):
-        problem = Problem(self.input)
-        return problem.solve()
+        problem = Problem(self.input.copy())
+        return problem.solve() if part == 1 else problem.solve2()
 
 
-f = open(__file__[:-3] + '.test', 'r')
+f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
 #print("Puzzle 2: ", solver.solve(2))
