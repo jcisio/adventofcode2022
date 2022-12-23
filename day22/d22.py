@@ -40,24 +40,38 @@ class Problem:
                 y = self.mm[(1, j, x)]
             dir = self.dir
         else:
-            M = 50
-            zones = [
-                # position, mapping right/bottom/left/top each is (zone, rotate CCW)
-                ((1,0), None, None, (4, 180), (5, 90)),
-                ((2,0), (3, 180), (2, 90), None, (5,0)),
-                ((1,1), (1, 270), None, (4, 270), None),
-                ((1,2), (1, 180), (5, 90), None, None),
-                ((0,2), None, None, (0, 180), (2, 90)),
-                ((0,3), (3, 270), (1, 0), (0, 270), None)
-            ]
+            if len(self.board) == 4*4*6:
+                M = 4
+                zones = [
+                    # position, mapping right/bottom/left/top each is (zone, rotate CCW)
+                    ((2, 0), (5,180), None, (2, 270), (1, 180)),
+                    ((0, 1), None, (4, 180), (5, 90), (0, 180)),
+                    ((1, 1), None, (4, 270), None, (0, 90)),
+                    ((2, 1), (5, 90), None, None, None),
+                    ((2, 2), None, (1,180), (2, 90), None),
+                    ((3, 2), (0, 180), (1, 270), None, (3, 270))
+                ]
+            else:
+                M = 50
+                zones = [
+                    # position, mapping right/bottom/left/top each is (zone, rotate CCW)
+                    ((1, 0), None, None, (4, 180), (5, 90)),
+                    ((2, 0), (3, 180), (2, 90), None, (5, 0)),
+                    ((1, 1), (1, 270), None, (4, 270), None),
+                    ((1, 2), (1, 180), (5, 90), None, None),
+                    ((0, 2), None, None, (0, 180), (2, 90)),
+                    ((0, 3), (3, 270), (1, 0), (0, 270), None)
+                ]
             for j in range(6):
                 z = zones[j]
                 if z[0][0] * M <= x < (z[0][0] + 1) * M and z[0][1] * M <= y < (z[0][1] + 1) * M:
+                    self.printer(f'  In zone {j}')
                     break
             else:
                 raise ValueError(f'Zone not found for {xy}')
             # Find neighbor
             neighbor = z[[(1,0),(0,1),(-1,0),(0,-1)].index(d)+1]
+            self.printer(f'  Move to zone {neighbor[0]} {neighbor[1]}°CCW')
             zz = z[0] # zone position
             zn = zones[neighbor[0]][0] # zone position
             rn = neighbor[1] # rotate
@@ -73,21 +87,19 @@ class Problem:
             elif rn == 90:
                 if d[0] == 0:
                     x, y = sx + (0 if d[1] == -1 else D), dx + sy
-                elif d == (-1,0):
-                    x, y = sx + D - dy, sy+D
-                elif d == (1, 0):
-                    x, y = sy + D - dx, sy
+                elif d[1] == 0:
+                    x, y = sx + D - dy, sy + (0 if d[0] == 1 else D)
             elif rn == 180:
                 if d[0] == 0:
                     x, y = sx + D - dx, sy + (0 if d[1] == -1 else D)
                 elif d[1] == 0:
-                    x, y = sx + (0 if d[1] == -1 else D), sy + D - dy
+                    x, y = sx + (0 if d[0] == -1 else D), sy + D - dy
             elif rn == 270:
                 if d[0] == 0:
                     x, y = sx + (0 if d[1] == 1 else D), sy + D - dx
                 elif d[1] == 0:
-                    x, y = sx + dy, sy + (0 if d[1] == -1 else D)
-        self.printer(f'Wrap {xy} {d} to ({x}, {y}) {dir}')
+                    x, y = sx + dy, sy + (0 if d[0] == -1 else D)
+        self.printer(f'  Wrap {xy} {self.dir} to ({x}, {y}) {dir}')
         return (x, y), dir
 
     def ahead(self):
@@ -115,9 +127,7 @@ class Problem:
     def solve(self):
         while self.next():
             pass
-        score = 1000 * (self.xy[1] + 1) + 4 * (self.xy[0] + 1) + self.DIR.index(self.dir)
-
-        return score
+        return 1000 * (self.xy[1] + 1) + 4 * (self.xy[0] + 1) + self.DIR.index(self.dir)
 
 
 class Solver:
@@ -147,7 +157,7 @@ class Solver:
         return problem.solve()
 
 
-f = open(__file__[:-3] + '.test', 'r')
+f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().rstrip().split('\n'))
-#print("Puzzle 1: ", solver.solve())
+print("Puzzle 1: ", solver.solve())
 print("Puzzle 2: ", solver.solve(2))
