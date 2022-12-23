@@ -5,9 +5,12 @@ import parse
 
 class Problem:
     def __init__(self, input) -> None:
-        self.printer = print if __debug__ else lambda *x: None
+        pass
 
     def solve(self):
+        return 0
+
+    def solve2(self):
         return 0
 
 
@@ -17,7 +20,7 @@ class Solver:
 
     def solve(self, part=1):
         problem = Problem(self.input)
-        return problem.solve()
+        return problem.solve() if part==1 else problem.solve2()
 
 
 f = open(__file__[:-3] + '.in', 'r')

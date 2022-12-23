@@ -5,14 +5,13 @@ https://adventofcode.com/2022/day/23
 """
 class Problem:
     def __init__(self, input) -> None:
-        self.printer = print if __debug__ else lambda *x: None
         self.elves = input
         self.round = 0
 
     def is_empty(self, elves):
         return all(elve not in self.elves for elve in elves)
 
-    def propose(self, elve, next):
+    def propose(self, elve):
         x,y = elve
         if self.is_empty([(x - 1, y - 1), (x, y - 1), (x + 1, y - 1), (x - 1, y + 1), (x, y + 1), (x + 1, y + 1), (x-1,y), (x+1,y)]):
             return None
@@ -22,33 +21,33 @@ class Problem:
             [(x-1,y-1), (x-1,y), (x-1,y+1)],
             [(x+1,y-1), (x+1,y), (x+1,y+1)]
         ]
-        next = self.round
         for i in range(4):
-            if self.is_empty(props[(next + i)%4]):
-                return props[(next + i) % 4][1], (next + i) % 4
+            if self.is_empty(props[(self.round + i)%4]):
+                return props[(self.round + i) % 4][1], (self.round + i) % 4
 
     def move(self) -> int:
-        self.printer('== Next roundd ==')
+        if __debug__: print(f'== Round {self.round+1} ==')
         n = {}
         p = {}
         d = 'NSWE'
         for elve in self.elves:
-            p[elve] = self.propose(elve, self.elves[elve])
+            p[elve] = self.propose(elve)
             if p[elve]:
-                self.printer(f'Elve {elve} proposes to move to {d[p[elve][1]]} {p[elve][0]}')
+                if __debug__:
+                    print(f'Elve {elve} proposes to move to {d[p[elve][1]]} {p[elve][0]}')
                 n[p[elve][0]] = n[p[elve][0]] + 1 if p[elve][0] in n else 1
         moves = 0
         for elve in list(self.elves):
             if p[elve]:
                 if n[p[elve][0]] == 1:
-                    self.printer(f'Elve {elve} moves to {d[p[elve][1]]} {p[elve][0]}')
-                    self.elves[p[elve][0]] = (p[elve][1] + 1) % 4
+                    if __debug__:
+                        print(f'Elve {elve} moves to {d[p[elve][1]]} {p[elve][0]}')
+                    self.elves[p[elve][0]] = True
                     del self.elves[elve]
                     moves += 1
-                else:
-                    self.elves[elve] = (p[elve][1] + 1) % 4
         self.round += 1
-        self.print()
+        if __debug__:
+            self.print()
         return moves
 
     def mm(self):
@@ -65,8 +64,8 @@ class Problem:
         xmin, xmax, ymin, ymax = self.mm()
         for y in range(ymin, ymax + 1):
             for x in range(xmin, xmax + 1):
-                self.printer('NSWE'[self.elves[(x,y)]] if (x, y) in self.elves else '.', end='')
-            self.printer()
+                print('#' if (x, y) in self.elves else '.', end='')
+            print()
 
     def solve(self):
         for _ in range(10):
@@ -75,10 +74,9 @@ class Problem:
         return (xmax - xmin + 1) * (ymax - ymin + 1) - len(self.elves)
 
     def solve2(self):
-        rounds = 1
         while self.move() > 0:
-            rounds += 1
-        return rounds
+            pass
+        return self.round
 
 
 class Solver:
@@ -87,7 +85,7 @@ class Solver:
         for i, line in enumerate(input):
             for j, c in enumerate(line):
                 if c == '#':
-                    elves[(j,i)] = 0
+                    elves[(j,i)] = True
         self.input = elves
 
     def solve(self, part=1):
@@ -98,4 +96,4 @@ class Solver:
 f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 2: ", solver.solve(2))
