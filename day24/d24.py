@@ -5,31 +5,28 @@ https://adventofcode.com/2022/day/24
 """
 from __future__ import annotations
 from collections import deque
-import functools
 from math import gcd
-import parse
 
 
 class Problem:
     def __init__(self, blizzards: list[Blizzard]) -> None:
         self.blizzards = [b for b in blizzards]
-
-    @staticmethod
-    def can_stay(x, y, S, P) -> bool:
-        return (x, y) not in S and (x, y) in P
-
-    def solve(self):
         N = Blizzard.XY[0] * Blizzard.XY[1] // gcd(Blizzard.XY[0], Blizzard.XY[1])
-        S = []
+        self.S = []
         for _ in range(N):
-            S.append(set(b.xy for b in self.blizzards))
+            self.S.append(set(b.xy for b in self.blizzards))
             for b in self.blizzards:
                 b.move()
+
+    def can_stay(self, x, y, state, P) -> bool:
+        return (x, y) not in self.S[state] and (x, y) in P
+
+    def find(self, start, end, init_state = 0):
         P = {(x,y):1e100 for x in range(Blizzard.XY[0]) for y in range(Blizzard.XY[1])}
-        P[(0, -1)] = 0
-        P[(Blizzard.XY[0] - 1, Blizzard.XY[1])] = 1e100
+        P[start] = 0
+        P[end] = 1e100
         Q = deque()
-        Q.append(((0, -1, 0), 0))
+        Q.append(((start[0], start[1], init_state), 0))
         V = set()
         while Q:
             q, t = Q.popleft()
@@ -38,15 +35,22 @@ class Problem:
             V.add(q)
             P[q[:2]] = min(P[q[:2]], t)
             # Next move?
-            i = (q[2]+1) % N
+            i = (q[2]+1) % len(self.S)
             for d in [(0,0), (-1,0), (1,0), (0,-1), (0,1)]:
-                if self.can_stay(q[0]+d[0], q[1]+d[1], S[i], P) and (q[0] + d[0], q[1] + d[1], i) not in V:
+                if self.can_stay(q[0]+d[0], q[1]+d[1], i, P) and (q[0] + d[0], q[1] + d[1], i) not in V:
                     V.add((q[0] + d[0], q[1] + d[1], i))
                     Q.append(((q[0] + d[0], q[1] + d[1], i), t + 1))
-        return P[(Blizzard.XY[0] - 1, Blizzard.XY[1])]
+        return P[end]
+
+    def solve(self):
+        return self.find((0, -1), (Blizzard.XY[0] - 1, Blizzard.XY[1]))
 
     def solve2(self):
-        return 0
+        a, b = (0, -1), (Blizzard.XY[0] - 1, Blizzard.XY[1])
+        q1 = self.find(a, b)
+        q2 = self.find(b, a, q1)
+        q3 = self.find(a, b, q1+q2)
+        return q1 + q2 + q3
 
 
 class Blizzard:
@@ -74,7 +78,7 @@ class Solver:
         return problem.solve() if part==1 else problem.solve2()
 
 
-f = open(__file__[:-3] + '.test', 'r')
+f = open(__file__[:-3] + '.in', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
-#print("Puzzle 2: ", solver.solve(2))
+print("Puzzle 2: ", solver.solve(2))
