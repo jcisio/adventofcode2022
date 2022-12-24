@@ -3,12 +3,11 @@ Advent Of Code
 --- Day 19: Not Enough Minerals ---
 https://adventofcode.com/2022/day/19
 """
+from __future__ import annotations
 import parse
 
 
 class Problem:
-    MINUTES = 24
-
     class Blueprint:
         def __init__(self, blueprint: str) -> None:
             r = parse.parse('Blueprint {:d}: Each ore robot costs {:d} ore. Each clay robot costs {:d} ore. Each obsidian robot costs {:d} ore and {:d} clay. Each geode robot costs {:d} ore and {:d} obsidian.', blueprint)
@@ -18,133 +17,86 @@ class Problem:
             self.clay = r.fixed[2]
             self.obsidian = (r.fixed[3], r.fixed[4])
             self.geode = (r.fixed[5], r.fixed[6])
-            self.max = (None, None)
+            self.robots = ('ore', 'clay', 'obsidian', 'geode')
 
         @staticmethod
         def cmp(a, b):
             '''Compare two resource'''
-            for r in ['geode', 'obsidian', 'clay', 'ore']:
+            for r in range(7,3,-1):
                 if a[r] < b[r]:
                     return -1
                 elif a[r] > b[r]:
                     return 1
             return 0
 
-        def build_robot(self, resource, option):
-            if option == 1:
-                new_robot = 'ore'
-                resource['ore'] -= self.ore
-            elif option == 2:
-                new_robot = 'clay'
-                resource['ore'] -= self.clay
-            elif option == 3:
-                new_robot = 'obsidian'
-                resource['ore'] -= self.obsidian[0]
-                resource['clay'] -= self.obsidian[1]
-            elif option == 4:
-                new_robot = 'geode'
-                resource['ore'] -= self.geode[0]
-                resource['obsidian'] -= self.geode[1]
-            else:
-                new_robot = None
-            return new_robot
-
-        def get_upper_bound(self, robots, resource, minutes):
+        def get_upper_bound(self, s, minutes):
             '''Return the upper bound number of geodes that could be build'''
             # If we don't have enought obsidian, build them first.
-            if resource['obsidian'] < self.geode[1]:
+            if s[6] < self.geode[1]:
                 minutes -= 1
             # Return the number if we build one geode-cracking every minute.
-            N = robots['geode']
-            return (N+minutes)*(N+minutes-1)//2 - N*(N-1)//2
+            return (s[3] + minutes) * (s[3] + minutes - 1) // 2 - s[3] * (s[3] - 1) // 2 + s[7]
 
-        def build_geodes(self, robots, resource, steps, minutes):
-            # Worth moving further?
-            if self.max[0] and minutes <=20 and self.get_upper_bound(robots, resource, minutes) <= self.max[0]['geode']:
-                pass
-            resource = resource.copy()
-            robots = robots.copy()
-            new_robot = self.build_robot(resource, steps[-1])
-            for r in robots:
-                resource[r] += robots[r]
-            if new_robot:
-                robots[new_robot] += 1
-            # And next step?
-            if minutes == 1:
-                if not self.max[0] or self.cmp(self.max[0], resource) == -1:
-                    self.max = (resource, steps.copy())
-#                    print(steps, robots, resource)
-                return (robots, resource)
+        def add_state(self, s, m):
+            if not hasattr(self, 'cache'):
+                self.cache = set()
+            if (s,m) in self.cache:
+                return
+            self.cache.add((s,m))
+            self.states.append((s, m))
+            if __debug__:
+                print(f'-> Add state {s} {m}')
 
-            options = []
-            if resource['ore'] >= self.geode[0] and resource['obsidian'] >= self.geode[1]:
-                options.append(4)
-            else:
-                if resource['ore'] >= self.obsidian[0] and resource['clay'] >= self.obsidian[1] and robots['obsidian'] < self.geode[1]:
-                    options.append(3)
-                if resource['ore'] >= self.clay and robots['clay'] < self.obsidian[1]:
-                    options.append(2)
-                if resource['ore'] >= self.ore and robots['ore'] < max(self.clay, self.obsidian[0], self.geode[0]):
-                    options.append(1)
-                if robots['ore'] <= min(self.clay, self.obsidian[0], self.geode[0]):
-                    options.append(0)
-            if not options:
-                # Need to do something anyway.
-                options.append(0)
-            max_geodes = 0
-            for option in options:
-                steps.append(option)
-                new_robots, new_resource = self.build_geodes(robots, resource, steps, minutes - 1)
-                if max_geodes <= new_resource['geode']:
-                    max_robots = new_robots
-                    max_resource = new_resource
-                    max_geodes = new_resource['geode']
-                steps.pop()
-            return (max_robots, max_resource)
+        def pop_state(self):
+            s, m = self.states.pop(0)
+            # if __debug__:
+            #     print(f'Pop state {s} {m}')
+            return (s, m)
 
-        def print(self):
-            m = 0
-            robots = {'ore': 1, 'clay': 0, 'obsidian': 0, 'geode': 0}
-            resource = {'ore': 0, 'clay': 0, 'obsidian': 0, 'geode': 0}
-            for option in self.max[1]:
-                m += 1
-                print(f'== Minute {m} ==')
-                new_robot = self.build_robot(resource, option)
-                if option == 1:
-                    print(f'Spend {self.ore} ore to start building an ore-collecting robot.')
-                elif option == 2:
-                    print(f'Spend {self.clay} ore to start building a clay-collecting robot.')
-                elif option == 3:
-                    print(f'Spend {self.obsidian[0]} ore and {self.obsidian[1]} clay to start building an obsidian-collecting robot.')
-                elif option == 4:
-                    print(f'Spend {self.geode[0]} ore and {self.geode[1]} obsidian to start building an geode-cracking robot.')
-                for r in robots:
-                    if robots[r] > 0:
-                        resource[r] += robots[r]
-                        print(f'{robots[r]} {r}-kissing robot collect collect {robots[r]} {r}; you now have {resource[r]} {r}.')
-                if new_robot:
-                    robots[new_robot] += 1
-                    print(f'The new {new_robot} robot is ready, you now have {robots[new_robot]} of them.')
-                print('')
-            return resource['geode']
+        def max_geodes(self, minutes) -> int:
+            if __debug__:
+                print('Computing blueprint...')
+            state_max = None
+            self.states = []
+            # First step is to wait and collect ore.
+            # 4 robots and 4 resource
+            self.add_state((1, 0, 0, 0, 0, 0, 0, 0), minutes)
+            while self.states:
+                s, m = self.pop_state()
+                if m == 0:
+                    # Last step: eval.
+                    if not state_max or self.cmp(state_max, s) == -1:
+                        state_max = s
+                        if __debug__:
+                            print(f'* Found new max of {s[7]} with state {s}')
+                    continue
+                # if state_max and self.get_upper_bound(s, m) <= state_max[7]:
+                #     continue
 
-        def max_geodes(self) -> int:
-            robots = {'ore': 1, 'clay': 0, 'obsidian': 0, 'geode': 0}
-            resource = {'ore': 0, 'clay': 0, 'obsidian': 0, 'geode': 0}
-            steps = [0]
-            self.build_geodes(robots, resource, steps, Problem.MINUTES)
-            return self.print()
+                build = False
+                m -= 1
+                if s[4] >= self.geode[0] and s[6] >= self.geode[1]:
+                    self.add_state((s[0], s[1], s[2], s[3]+1, s[0]+s[4]-self.geode[0], s[1]+s[5], s[2]+s[6]-self.geode[1], s[3]+s[7]), m)
+                    build = True
+                elif s[4] >= self.obsidian[0] and s[5] >= self.obsidian[1]:
+                    self.add_state((s[0], s[1], s[2]+1, s[3], s[0] + s[4] - self.obsidian[0], s[1] + s[5]-self.obsidian[1], s[2] + s[6], s[3] + s[7]), m)
+                    build = True
+                if s[4] >= self.clay and s[1] < self.obsidian[1]:
+                    self.add_state((s[0], s[1]+1, s[2], s[3], s[0] + s[4] - self.clay, s[1] + s[5], s[2] + s[6], s[3] + s[7]), m)
+                    build = True
+                if s[4] >= self.ore and s[0] < max(self.clay, self.obsidian[0], self.geode[0]):
+                    self.add_state((s[0]+1, s[1], s[2], s[3], s[0] + s[4] - self.ore, s[1] + s[5], s[2] + s[6], s[3] + s[7]), m)
+                    build = True
+                if not build or s[4] <= max(self.clay, self.obsidian[0], self.geode[0]):
+                    self.add_state((s[0], s[1], s[2], s[3], s[0] + s[4], s[1] + s[5], s[2] + s[6], s[3] + s[7]), m)
+            return state_max[7]
 
-    def __init__(self, blueprints: list) -> None:
+    def __init__(self, blueprints: list[Blueprint]) -> None:
         self.blueprints = blueprints
 
-    def max_geodes(self, blueprint: Blueprint) -> int:
-        print('Computing blueprint...')
-        return blueprint.max_geodes()
-
     def solve(self):
-        return self.max_geodes(self.blueprints[0])
-#        return sum([(i+1)*self.max_geodes(blueprint) for i, blueprint in enumerate(self.blueprints)])
+#        return self.blueprints[1].max_geodes(24)
+        return sum([(i+1)*blueprint.max_geodes(24) for i, blueprint in enumerate(self.blueprints)])
 
 
 class Solver:
@@ -160,7 +112,7 @@ class Solver:
         return problem.solve()
 
 
-f = open(__file__[:-3] + '.in', 'r')
+f = open(__file__[:-3] + '.test', 'r')
 solver = Solver(f.read().strip().split('\n'))
 print("Puzzle 1: ", solver.solve())
 # print("Puzzle 2: ", solver.solve(2))
